@@ -1,12 +1,10 @@
 {
-  "name": "Fumi MKS 2 Dashboard",
-  "short_name": "FumiMKS2",
-  "description": "Fumigation Operations Management System - PT Rentokil Indonesia",
+  "name": "Fumi MKS 2",
+  "short_name": "Fumi MKS 2",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#0a192f",
-  "theme_color": "#0a192f",
-  "orientation": "portrait",
+  "background_color": "#08142c",
+  "theme_color": "#08142c",
   "icons": [
     {
       "src": "logo.png.png",
@@ -18,7 +16,7 @@
       "src": "logo.png.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     }
   ]
 }
