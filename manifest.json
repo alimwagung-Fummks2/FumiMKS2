@@ -8,12 +8,19 @@
   "theme_color": "#08142c",
   "orientation": "portrait",
   "icons": [
-    {
-      "src": "https://i.postimg.cc/90YX1YMZ/IMG-20261101-WA0000-1-removebg-preview.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
+  {
+    "src": "logo.png.png",
+    "sizes": "192x192",
+    "type": "image/png",
+    "purpose": "any maskable"
+  },
+  {
+    "src": "logo.png.png",
+    "sizes": "512x512",
+    "type": "image/png",
+    "purpose": "any maskable"
+  }
+]
     {
       "src": "https://i.postimg.cc/90YX1YMZ/IMG-20261101-WA0000-1-removebg-preview.png",
       "sizes": "512x512",
