@@ -1,49 +1,55 @@
-const CACHE_NAME = 'fumi-mks2-v4';
-const urlsToCache = [
-  './',
-  './index.html',
-  './manifest.json',
-  './logo.png.png'
-];
+const CACHE_NAME = 'fumi-mks2-shell-v5';
+const SHELL_FILES = ['./', './index.html', './manifest.json', './logo.png.png'];
 
-// Instalasi Service Worker
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(urlsToCache))
-      .catch(err => console.warn('Cache awal dilewati:', err))
+      .then(cache => cache.addAll(SHELL_FILES).catch(err => console.warn('Cache shell parsial:', err)))
   );
   self.skipWaiting();
 });
 
-// Aktivasi dan pembersihan cache lama
 self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.keys().then(cacheNames => {
-      return Promise.all(
-        cacheNames.map(cacheName => {
-          if (cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    })
+    caches.keys().then(keys => Promise.all(
+      keys.filter(key => key.startsWith('fumi-mks2-') && key !== CACHE_NAME)
+        .map(key => caches.delete(key))
+    ))
   );
   self.clients.claim();
 });
 
-// Intersep request
 self.addEventListener('fetch', event => {
-  // Trafik Google Apps Script selalu langsung ke jaringan internet
-  if (event.request.url.includes('script.google.com')) {
-    event.respondWith(fetch(event.request));
+  const request = event.request;
+  const url = new URL(request.url);
+
+  // Jangan cache atau intersep aplikasi Google Apps Script.
+  if (url.hostname === 'script.google.com' || url.hostname.endsWith('.googleusercontent.com')) return;
+  if (request.method !== 'GET' || url.origin !== self.location.origin) return;
+
+  // Navigasi utama: network-first agar versi GitHub terbaru diprioritaskan.
+  if (request.mode === 'navigate') {
+    event.respondWith(
+      fetch(request).then(response => {
+        const copy = response.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put('./index.html', copy));
+        return response;
+      }).catch(() => caches.match('./index.html'))
+    );
     return;
   }
 
-  // File lokal GitHub Pages
+  // Aset statis: cache-first, lalu simpan hasil jaringan.
   event.respondWith(
-    caches.match(event.request).then(response => {
-      return response || fetch(event.request);
+    caches.match(request).then(cached => {
+      if (cached) return cached;
+      return fetch(request).then(response => {
+        if (response && response.ok) {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
+        }
+        return response;
+      });
     })
   );
 });
