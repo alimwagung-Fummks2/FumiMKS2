@@ -59,6 +59,14 @@
     }
     frame.addEventListener('load', sembunyikanLoader);
     muatUlangAplikasi();
+
+    // Terima sinyal dari tombol Sinkron di dalam aplikasi
+    window.addEventListener('message', function(event) {
+      if (event.data === 'RELOAD_FUMI_APP') {
+        muatUlangAplikasi();
+      }
+    });
+
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js').catch(err => console.warn('Service Worker:', err));
