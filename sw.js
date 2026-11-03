@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fumi-mks2-shell-v5';
+const CACHE_NAME = 'fumi-mks2-shell-v6';
 const SHELL_FILES = ['./', './index.html', './manifest.json', './logo.png.png'];
 
 self.addEventListener('install', event => {
