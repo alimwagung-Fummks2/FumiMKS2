@@ -34,43 +34,75 @@
     <p>Periksa koneksi internet atau buka kembali aplikasi.</p>
     <button type="button" onclick="muatUlangAplikasi()">Muat Ulang</button>
   </div>
-  <iframe id="appFrame" title="Fumi MKS 2 Dashboard" allow="camera; microphone" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+  <iframe id="appFrame" title="Fumi MKS 2 Dashboard" allow="camera; microphone" referrerpolicy="strict-origin-when-cross-origin" loading="eager"></iframe>
   <script>
+    // URL deployment dipertahankan sama dengan konfigurasi GitHub saat ini.
+    // Jika deployment GAS berubah, perbarui URL ini secara eksplisit.
     const WEB_APP_URL = "https://script.google.com/a/macros/rentokil-initial.com/s/AKfycbzbp53PMsFtM1o5GWIF4NVXC2TZluId9fawC_XFJJjF6ef-dOgw6ZxZLnXCRC8Nj3BKJA/exec";
     const frame = document.getElementById('appFrame');
     const loader = document.getElementById('loader');
+    const errorPanel = document.getElementById('errorPanel');
+    const LOAD_TIMEOUT_MS = 35000;
     let loadTimeout = null;
+    let reloadSequence = 0;
+
     function sembunyikanLoader() {
       if (!loader || loader.style.display === 'none') return;
       loader.style.opacity = '0';
-      setTimeout(() => loader.style.display = 'none', 260);
-      document.getElementById('errorPanel').style.display = 'none';
-      clearTimeout(loadTimeout);
+      window.setTimeout(() => { loader.style.display = 'none'; }, 260);
+      errorPanel.style.display = 'none';
+      if (loadTimeout) window.clearTimeout(loadTimeout);
+      loadTimeout = null;
     }
+
+    function tampilkanGagalMemuat() {
+      if (loadTimeout) window.clearTimeout(loadTimeout);
+      loadTimeout = null;
+      loader.style.display = 'none';
+      errorPanel.style.display = 'block';
+    }
+
     function muatUlangAplikasi() {
-      document.getElementById('errorPanel').style.display = 'none';
-      loader.style.display = 'flex'; loader.style.opacity = '1';
-      frame.src = WEB_APP_URL + (WEB_APP_URL.includes('?') ? '&' : '?') + 'v=' + Date.now();
-      clearTimeout(loadTimeout);
-      loadTimeout = setTimeout(() => {
-        loader.style.display = 'none';
-        document.getElementById('errorPanel').style.display = 'block';
-      }, 25000);
+      const sequence = ++reloadSequence;
+      errorPanel.style.display = 'none';
+      loader.style.display = 'flex';
+      loader.style.opacity = '1';
+      if (loadTimeout) window.clearTimeout(loadTimeout);
+
+      // Cache-busting memastikan iframe meminta URL eksekusi GAS terbaru.
+      const separator = WEB_APP_URL.includes('?') ? '&' : '?';
+      frame.src = WEB_APP_URL + separator + 'fumi_refresh=' + Date.now();
+
+      loadTimeout = window.setTimeout(() => {
+        if (sequence === reloadSequence) tampilkanGagalMemuat();
+      }, LOAD_TIMEOUT_MS);
     }
+
+    // Event load hanya menandakan navigasi iframe selesai, bukan validasi login.
     frame.addEventListener('load', sembunyikanLoader);
     muatUlangAplikasi();
 
-    // Terima sinyal dari tombol Sinkron di dalam aplikasi
+    // Hanya terima perintah reload dari iframe aplikasi ini dan origin Google.
     window.addEventListener('message', function(event) {
-      if (event.data === 'RELOAD_FUMI_APP') {
-        muatUlangAplikasi();
-      }
+      if (event.source !== frame.contentWindow) return;
+      const originDiizinkan = event.origin === 'https://script.google.com' ||
+        (event.origin.startsWith('https://') && event.origin.endsWith('.googleusercontent.com'));
+      if (!originDiizinkan) return;
+      if (event.data === 'RELOAD_FUMI_APP') muatUlangAplikasi();
     });
 
+    // Meminta browser memeriksa versi Service Worker terbaru tanpa menunggu siklus berkala.
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js').catch(err => console.warn('Service Worker:', err));
-      });
+      window.addEventListener('load', async () => {
+        try {
+          const registration = await navigator.serviceWorker.register('./sw.js', {
+            updateViaCache: 'none'
+          });
+          await registration.update();
+        } catch (err) {
+          console.warn('Pembaruan Service Worker gagal:', err);
+        }
+      }, { once: true });
     }
   </script>
 </body>
