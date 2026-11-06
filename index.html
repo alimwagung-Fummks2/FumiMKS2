@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- FumiMKS2 Revisi 224.5.1-M1.3.2 - Modul Notice QPS/Non-QPS terisolasi; Dashboard dan menu utama dipertahankan. -->
+<!-- FumiMKS2 Revisi 224.5.1-M1.3.3 - Modul Notice QPS/Non-QPS terisolasi; Dashboard dan menu utama dipertahankan. -->
 <html lang="id">
 <head>
 <base target="_top">
@@ -2159,12 +2159,16 @@ button.stat-card { border:1px solid #dbe4f0; }
 }
 
 
-.notice-save-icon{width:100px;height:100px;font-size:48px}.notice-save-logo{width:145px;height:125px}.notice-save-id{padding:10px}.notice-save-id>i{font-size:27px}}
+/* M1.3.3: aturan modal simpan lama dihapus; modal sukses standar tetap dipakai. */
 
 
 /* Dialog khusus Form Notice; tidak mengubah modal atau tampilan menu lain. */
-.notice-action-overlay{display:none;position:fixed;inset:0;z-index:1000100;align-items:center;justify-content:center;padding:16px;font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
-.notice-action-overlay.is-open{display:flex}
+/* M1.3.3: dialog Notice terisolasi dan selalu dipusatkan pada viewport. */
+#noticeActionModal.notice-action-overlay{display:none!important;position:fixed!important;top:0!important;right:0!important;bottom:0!important;left:0!important;width:100vw!important;height:100vh!important;height:100dvh!important;max-width:none!important;max-height:none!important;margin:0!important;transform:none!important;z-index:10001000!important;align-items:center!important;justify-content:center!important;padding:20px!important;overflow-y:auto!important;font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+#noticeActionModal.notice-action-overlay.is-open{display:flex!important}
+#noticeActionModal .notice-action-card{flex:0 1 520px;max-width:calc(100vw - 40px);max-height:calc(100dvh - 40px);overflow-y:auto;margin:auto!important;transform:none!important}
+#noticeActionModal .notice-action-backdrop{position:fixed;inset:0}
+@media(max-width:480px){#noticeActionModal.notice-action-overlay{padding:12px!important}#noticeActionModal .notice-action-card{max-width:calc(100vw - 24px);max-height:calc(100dvh - 24px)}}
 .notice-action-backdrop{position:absolute;inset:0;background:rgba(15,23,42,.62);backdrop-filter:blur(5px)}
 .notice-action-card{position:relative;width:min(520px,100%);background:#fff;border-radius:24px;padding:42px 28px 25px;text-align:center;box-shadow:0 24px 70px rgba(0,0,0,.3);overflow:hidden}
 .notice-action-card:before{content:"";position:absolute;left:0;right:0;top:0;height:8px;background:linear-gradient(110deg,#ed1c2e 0 17%,#fff 17% 23%,#0878e8 23% 70%,#dceeff 70% 100%)}
