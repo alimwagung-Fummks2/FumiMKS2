@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- FumiMKS2 Revisi 224.5.1-M1.3 - Modul Notice QPS/Non-QPS terisolasi; Dashboard dan menu utama dipertahankan. -->
+<!-- FumiMKS2 Revisi 224.5.1-M1.3.2 - Modul Notice QPS/Non-QPS terisolasi; Dashboard dan menu utama dipertahankan. -->
 <html lang="id">
 <head>
 <base target="_top">
@@ -2119,6 +2119,76 @@ button.stat-card { border:1px solid #dbe4f0; }
 .notice-actions>div{display:flex;gap:8px;flex-wrap:wrap}
 @media(max-width:700px){.notice-grid{grid-template-columns:1fr}.notice-sign{grid-template-columns:1fr}.notice-idbar label{width:100%}.notice-actions{align-items:stretch}.notice-actions>div{width:100%}.notice-actions button{flex:1}.notice-table{min-width:520px}}
 
+
+/* NOTICE FORM UI POLISH — aplikasi saja, tidak memengaruhi CSS PDF */
+.notice-page{font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+.notice-card{padding:18px}
+.notice-card>h3{font-size:14px;letter-spacing:.1px}
+.notice-grid label,.notice-sign>label,.notice-full{font-size:12.5px;font-weight:700;line-height:1.45;color:#26364d}
+.notice-grid input,.notice-grid select,.notice-sign input,.notice-full textarea,.notice-idbar input{
+  min-height:42px;padding:10px 12px;border:1px solid #cbd5e1;border-radius:9px;
+  font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  font-size:13px;font-weight:500;line-height:1.4;letter-spacing:.05px;color:#172b4d;
+  background:#fff;box-shadow:inset 0 1px 2px rgba(15,23,42,.025);transition:border-color .15s ease,box-shadow .15s ease;
+}
+.notice-grid input::placeholder,.notice-full textarea::placeholder,.notice-table input::placeholder{color:#94a3b8;font-weight:400}
+.notice-grid input:focus,.notice-grid select:focus,.notice-sign input:focus,.notice-full textarea:focus,.notice-idbar input:focus,.notice-table input:focus{
+  outline:none;border-color:#2684ff;box-shadow:0 0 0 3px rgba(38,132,255,.13)
+}
+.notice-grid select{appearance:auto;cursor:pointer}
+.notice-full textarea{min-height:78px;resize:vertical}
+.notice-idbar{align-items:center}
+.notice-idbar label{font-size:11.5px}
+.notice-idbar input{font-size:12.5px;font-weight:700}
+.notice-table{font-family:'Plus Jakarta Sans',sans-serif;font-size:11.5px}
+.notice-table th{font-size:10.5px;font-weight:800;letter-spacing:.35px;color:#42526e;background:#f1f5f9}
+.notice-table input{min-height:37px;padding:8px 9px;font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;color:#172b4d}
+.notice-checks label{font-size:12.5px;line-height:1.55;color:#344563;gap:9px}
+.notice-checks input{width:16px;height:16px;accent-color:#0875e1;flex:0 0 auto}
+.notice-subcard{padding:14px}
+.notice-subcard h4{font-size:12.5px;font-weight:800}
+.notice-actions button,.notice-head button,.notice-row-title button{font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:700;border-radius:9px;min-height:39px}
+.notice-actions>span{font-size:12px;font-weight:600}
+.notice-status-saving{color:#2563eb!important}
+.notice-status-success{color:#15803d!important}
+.notice-status-error{color:#b91c1c!important}
+@media(max-width:700px){
+ .notice-card{padding:14px}
+ .notice-grid input,.notice-grid select,.notice-sign input,.notice-full textarea{font-size:13.5px;min-height:44px}
+ .notice-actions button{min-height:42px}
+}
+
+
+.notice-save-icon{width:100px;height:100px;font-size:48px}.notice-save-logo{width:145px;height:125px}.notice-save-id{padding:10px}.notice-save-id>i{font-size:27px}}
+
+
+/* Dialog khusus Form Notice; tidak mengubah modal atau tampilan menu lain. */
+.notice-action-overlay{display:none;position:fixed;inset:0;z-index:1000100;align-items:center;justify-content:center;padding:16px;font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+.notice-action-overlay.is-open{display:flex}
+.notice-action-backdrop{position:absolute;inset:0;background:rgba(15,23,42,.62);backdrop-filter:blur(5px)}
+.notice-action-card{position:relative;width:min(520px,100%);background:#fff;border-radius:24px;padding:42px 28px 25px;text-align:center;box-shadow:0 24px 70px rgba(0,0,0,.3);overflow:hidden}
+.notice-action-card:before{content:"";position:absolute;left:0;right:0;top:0;height:8px;background:linear-gradient(110deg,#ed1c2e 0 17%,#fff 17% 23%,#0878e8 23% 70%,#dceeff 70% 100%)}
+.notice-action-close{position:absolute;right:15px;top:8px;border:0;background:transparent;color:#17315e;font-size:30px;cursor:pointer}
+.notice-action-badge{width:86px;height:86px;margin:-2px auto 12px;border:6px solid #fff;border-radius:50%;display:grid;place-items:center;font-size:38px;color:#0878e8;background:#e8f4ff;box-shadow:0 5px 18px rgba(8,120,232,.2)}
+.notice-action-card.is-error .notice-action-badge{color:#dc2626;background:#fff0f0;box-shadow:0 5px 18px rgba(220,38,38,.15)}
+.notice-action-card.is-confirm .notice-action-badge{color:#0878e8;background:#e8f4ff}
+.notice-action-card h2{font-size:clamp(22px,4vw,30px);font-weight:800;color:#10285c;margin:4px 0 12px}
+.notice-action-logo{width:132px;height:105px;object-fit:contain;display:block;margin:0 auto 8px}
+.notice-action-message{font-size:14px;line-height:1.5;font-weight:650;color:#142d5d;margin:8px auto 16px;max-width:420px;overflow-wrap:anywhere}
+.notice-action-id{display:flex;align-items:center;gap:12px;text-align:left;padding:11px 14px;border:2px solid #a6d2ff;border-radius:14px;background:#eff7ff;color:#0876df;margin:0 auto 16px;max-width:100%}
+.notice-action-id>i{font-size:28px;border-right:2px solid #8bc4ff;padding-right:12px}
+.notice-action-id div{min-width:0;display:flex;flex-direction:column;gap:2px}
+.notice-action-id span{font-size:11px;color:#25446f}
+.notice-action-id strong{font-size:clamp(12px,2.5vw,17px);color:#10285c;overflow-wrap:anywhere}
+.notice-action-warning{display:none;background:#fff3cd;color:#7c4a03;border-radius:12px;padding:10px 12px;margin:0 0 16px;font-size:12px;font-weight:650;text-align:left}
+.notice-action-card.is-confirm .notice-action-warning{display:block}
+.notice-action-buttons{display:flex;gap:10px;justify-content:center}
+.notice-action-buttons button{min-height:46px;border:0;border-radius:13px;padding:10px 20px;font:800 14px 'Plus Jakarta Sans',sans-serif;cursor:pointer;flex:1}
+.notice-action-cancel{background:#e7f2ff;color:#12356b;border:1px solid #b8d9fb!important}
+.notice-action-primary{background:linear-gradient(100deg,#0878ed,#0754cf);color:#fff;box-shadow:0 4px 0 #1749a2}
+.notice-action-primary:disabled{opacity:.6;cursor:wait}
+@media(max-width:480px){.notice-action-card{padding:38px 17px 20px;border-radius:19px}.notice-action-logo{width:112px;height:90px}.notice-action-buttons button{font-size:12px;padding:9px 10px}}
+
 </style>
 </head>
 <body>
@@ -2762,7 +2832,7 @@ button.stat-card { border:1px solid #dbe4f0; }
     </div>
     <div class="notice-actions">
       <span id="noticeStatusDraft">Draft belum diterbitkan</span>
-      <div><button type="button" class="secondary" onclick="simpanDraftAktif(false)"><i class="fa-solid fa-floppy-disk"></i> Simpan Draft</button>
+      <div><button type="button" class="secondary" onclick="simpanNoticeDraft_()"><i class="fa-solid fa-floppy-disk"></i> Simpan Draft</button>
       <button type="button" class="secondary" onclick="aksiPreviewNotice_()"><i class="fa-regular fa-eye"></i> Preview PDF</button>
       <button type="button" class="btn-terbitkan" onclick="aksiTerbitkanNotice_()"><i class="fa-solid fa-paper-plane"></i> Terbitkan Notice</button></div>
     </div>
@@ -4739,45 +4809,116 @@ function validasiNoticeClient_() {
   if (!form) return false;
   const kategori=(document.getElementById('noticeKategori')||{}).value;
   const sasaran=(document.getElementById('noticeSasaran')||{}).value;
-  if (!kategori || !sasaran) { alert('Pilih Kategori Layanan dan Jenis Sasaran Fumigasi.'); return false; }
+  if (!kategori || !sasaran) { tampilkanDialogNotice_('error','Data Notice Belum Lengkap','Pilih Kategori Layanan dan Jenis Sasaran Fumigasi.', dokumenAktif && dokumenAktif.idDokumen); return false; }
   if (!form.reportValidity()) return false;
   if (kategori==='QPS') {
     const ids=['noticeDoAju','noticeEksportir','noticeKomoditasVolume','noticeAsal','noticeTujuan'];
-    if(ids.some(id=>!(document.getElementById(id).value||'').trim())) { alert('Lengkapi Shipment Overview QPS.'); return false; }
+    if(ids.some(id=>!(document.getElementById(id).value||'').trim())) { tampilkanDialogNotice_('error','Shipment Overview Belum Lengkap','Lengkapi seluruh data Shipment Overview untuk layanan QPS.', dokumenAktif && dokumenAktif.idDokumen); return false; }
   }
-  if (sasaran==='Ruang' && !(document.getElementById('noticeNamaRuang').value||'').trim()) { alert('Nama / Identitas Ruang wajib diisi.'); return false; }
-  if (sasaran!=='Ruang' && !(document.getElementById('noticeObjek').value||'').trim()) { alert('Rincian sasaran fumigasi wajib diisi.'); return false; }
+  if (sasaran==='Ruang' && !(document.getElementById('noticeNamaRuang').value||'').trim()) { tampilkanDialogNotice_('error','Data Ruang Belum Lengkap','Nama / Identitas Ruang wajib diisi.', dokumenAktif && dokumenAktif.idDokumen); return false; }
+  if (sasaran!=='Ruang' && !(document.getElementById('noticeObjek').value||'').trim()) { tampilkanDialogNotice_('error','Sasaran Fumigasi Belum Lengkap','Rincian sasaran fumigasi wajib diisi.', dokumenAktif && dokumenAktif.idDokumen); return false; }
   return true;
 }
 function payloadNoticeAktif_() {
   return { idDokumen: dokumenAktif.idDokumen, data: kumpulkanNoticeData_(), signature: ambilBase64Ttd('fumigator') };
 }
+
+let noticeDialogAction_ = null;
+function tampilkanDialogNotice_(jenis, judul, pesan, idDokumen, aksi) {
+  const modal=document.getElementById('noticeActionModal');
+  const card=document.getElementById('noticeActionCard');
+  if(!modal || !card) { window.alert(pesan || judul); return; }
+  card.classList.remove('is-error','is-confirm');
+  const icon=document.getElementById('noticeActionIcon');
+  const warning=document.getElementById('noticeActionWarning');
+  const cancel=document.getElementById('noticeActionCancel');
+  const primary=document.getElementById('noticeActionPrimary');
+  const idBox=document.getElementById('noticeActionIdBox');
+  if(jenis==='confirm') {
+    card.classList.add('is-confirm'); icon.innerHTML='<i class="fa-solid fa-file-circle-check"></i>';
+    cancel.style.display='inline-block'; primary.textContent='Terbitkan Notice'; noticeDialogAction_=aksi || null;
+  } else if(jenis==='error') {
+    card.classList.add('is-error'); icon.innerHTML='<i class="fa-solid fa-circle-exclamation"></i>';
+    cancel.style.display='none'; primary.textContent='Oke'; noticeDialogAction_=null;
+  } else {
+    icon.innerHTML='<i class="fa-solid fa-circle-info"></i>';
+    cancel.style.display='none'; primary.textContent='Oke'; noticeDialogAction_=null;
+  }
+  document.getElementById('noticeActionTitle').textContent=judul || 'Informasi Notice';
+  document.getElementById('noticeActionMessage').textContent=pesan || '';
+  document.getElementById('noticeActionId').textContent=idDokumen || '-';
+  idBox.style.display=idDokumen ? 'flex' : 'none';
+  warning.style.display=jenis==='confirm' ? 'block' : 'none';
+  modal.classList.add('is-open'); modal.setAttribute('aria-hidden','false');
+}
+function tutupDialogNotice_() {
+  const modal=document.getElementById('noticeActionModal');
+  if(modal){modal.classList.remove('is-open');modal.setAttribute('aria-hidden','true');}
+  noticeDialogAction_=null;
+}
+function aksiKonfirmasiDialogNotice_() {
+  const action=noticeDialogAction_;
+  tutupDialogNotice_();
+  if(typeof action==='function') action();
+}
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape') tutupDialogNotice_();
+});
+
+function simpanNoticeDraft_() {
+  if (!dokumenAktif || !dokumenAktif.idDokumen) {
+    tampilkanDialogNotice_('error','Tidak Dapat Menyimpan','Tidak ada dokumen aktif yang dapat disimpan.');
+    return;
+  }
+  window.__noticeManualSavePending = true;
+  window.__noticeManualSaveId = dokumenAktif.idDokumen;
+  const status = document.getElementById('noticeStatusDraft');
+  if (status) { status.textContent = 'Menyimpan draft...'; status.className = 'notice-status-saving'; }
+  simpanDraftAktif(false);
+}
+function tampilkanNoticeSaveSuccess_() {
+  const id = window.__noticeManualSaveId || (dokumenAktif && dokumenAktif.idDokumen) || '-';
+  // Reuse the existing branded FumiMKS2 success modal; this call is Notice-only.
+  bukaNotifikasiSukses('simpan', id);
+  const status = document.getElementById('noticeStatusDraft');
+  if (status) { status.textContent = 'Draft berhasil disimpan'; status.className = 'notice-status-success'; }
+}
+
 function aksiPreviewNotice_() {
   if (!dokumenAktif || !dokumenAktif.idDokumen || !validasiNoticeClient_()) return;
   const payload=payloadNoticeAktif_();
   const w=window.open('about:blank','_blank');
   google.script.run.withSuccessHandler(html => {
-    if(!w) { alert('Browser memblokir jendela preview. Izinkan pop-up lalu coba kembali.'); return; }
+    if(!w) { tampilkanDialogNotice_('error','Preview Tidak Dapat Dibuka','Browser memblokir jendela preview. Izinkan pop-up lalu coba kembali.', dokumenAktif && dokumenAktif.idDokumen); return; }
     w.document.open(); w.document.write(html); w.document.close();
-  }).withFailureHandler(err => { if(w) w.close(); alert('Preview Notice gagal: '+err.message); })
+  }).withFailureHandler(err => { if(w) w.close(); tampilkanDialogNotice_('error','Preview Notice Gagal',err.message, dokumenAktif && dokumenAktif.idDokumen); })
     .previewNoticeFumiMks2Server(payload,getAuthToken_());
 }
 function aksiTerbitkanNotice_() {
   if (!dokumenAktif || !dokumenAktif.idDokumen || !validasiNoticeClient_()) return;
-  if (!ambilBase64Ttd('fumigator')) { alert('Tanda tangan Fumigator wajib dibubuhkan sebelum menerbitkan Notice.'); return; }
-  if (!confirm('Terbitkan Notice sebagai PDF resmi ke Google Drive?')) return;
+  if (!ambilBase64Ttd('fumigator')) {
+    tampilkanDialogNotice_('error','Tanda Tangan Belum Ada','Tanda tangan Fumigator wajib dibubuhkan sebelum menerbitkan Notice.', dokumenAktif.idDokumen);
+    return;
+  }
+  tampilkanDialogNotice_('confirm','Konfirmasi Terbitkan Notice','Yakin ingin menerbitkan Notice sebagai PDF resmi ke Google Drive?',dokumenAktif.idDokumen,eksekusiTerbitNotice_);
+}
+function eksekusiTerbitNotice_() {
+  if (!dokumenAktif || !dokumenAktif.idDokumen) return;
   const payload=payloadNoticeAktif_();
   const btn=document.querySelector('.notice-actions .btn-terbitkan');
   if(btn){btn.disabled=true;btn.textContent='Menerbitkan...';}
   google.script.run.withSuccessHandler(res => {
     if(btn){btn.disabled=false;btn.innerHTML='<i class="fa-solid fa-paper-plane"></i> Terbitkan Notice';}
-    alert('Notice berhasil diterbitkan. PDF tersimpan di arsip pekerjaan.');
+    // Reuse the application's established FumiMKS2 success design only for this Notice action.
+    bukaNotifikasiSukses('simpan',dokumenAktif.idDokumen);
+    const msg=document.getElementById('pesanNotifikasiSukses');
+    if(msg) msg.textContent='Notice berhasil diterbitkan dan PDF tersimpan di arsip pekerjaan.';
     tampilkanDaftarPdfTerbit(res.files);
     muatAntreanDariServer();
     const status=document.getElementById('noticeStatusDraft'); if(status) status.textContent='Notice telah diterbitkan';
   }).withFailureHandler(err => {
     if(btn){btn.disabled=false;btn.innerHTML='<i class="fa-solid fa-paper-plane"></i> Terbitkan Notice';}
-    alert('Gagal menerbitkan Notice: '+err.message);
+    tampilkanDialogNotice_('error','Gagal Menerbitkan Notice',err.message,dokumenAktif.idDokumen);
   }).terbitkanNoticeFumiMks2Server(payload,getAuthToken_());
 }
 
@@ -5223,6 +5364,12 @@ function jalankanSimpanDraftAktif_() {
                 return;
             }
 
+            autosaveRetryCount = 0;
+            if (window.__noticeManualSavePending && window.__noticeManualSaveId === idDokumenSnapshot) {
+                window.__noticeManualSavePending = false;
+                tampilkanNoticeSaveSuccess_();
+            }
+
             if (autosavePendingReturn) {
                 autosavePendingReturn = false;
                 kembaliKeAntrean();
@@ -5253,6 +5400,11 @@ function jalankanSimpanDraftAktif_() {
                 const jeda = 1000 * autosaveRetryCount;
                 if (elAuto) elAuto.textContent = `Gagal menyimpan. Mencoba ulang (${autosaveRetryCount}/2)...`;
                 timerAutosave = setTimeout(() => jalankanSimpanDraftAktif_(), jeda);
+            } else if (window.__noticeManualSavePending && window.__noticeManualSaveId === idDokumenSnapshot) {
+                window.__noticeManualSavePending = false;
+                const status = document.getElementById('noticeStatusDraft');
+                if (status) { status.textContent = 'Gagal menyimpan — perubahan masih ada di layar'; status.className = 'notice-status-error'; }
+                tampilkanDialogNotice_('error','Gagal Menyimpan Draft','Draft belum berhasil disimpan ke server. Periksa koneksi dan coba kembali.\n\n'+pesan, idDokumenSnapshot);
             }
         })
         .simpanDraftKeServer(payload, token);
@@ -5820,5 +5972,26 @@ function tampilkanDaftarFormulir() {
     `).join('');
 }
 </script>
+
+
+
+
+<div id="noticeActionModal" class="notice-action-overlay" aria-hidden="true">
+  <div class="notice-action-backdrop" onclick="tutupDialogNotice_()"></div>
+  <div id="noticeActionCard" class="notice-action-card" role="dialog" aria-modal="true" aria-labelledby="noticeActionTitle">
+    <button type="button" class="notice-action-close" aria-label="Tutup" onclick="tutupDialogNotice_()">×</button>
+    <div class="notice-action-badge" id="noticeActionIcon"><i class="fa-solid fa-circle-info"></i></div>
+    <h2 id="noticeActionTitle">Informasi Notice</h2>
+    <img class="notice-action-logo" src="https://raw.githubusercontent.com/alimwagung-Fummks2/FumiMKS2/main/logo.png.png" alt="Logo FumiMKS2">
+    <p class="notice-action-message" id="noticeActionMessage"></p>
+    <div class="notice-action-id" id="noticeActionIdBox"><i class="fa-regular fa-file-lines"></i><div><span>ID Dokumen:</span><strong id="noticeActionId">-</strong></div></div>
+    <div class="notice-action-warning" id="noticeActionWarning">Pastikan data Notice sudah benar sebelum diterbitkan sebagai PDF resmi.</div>
+    <div class="notice-action-buttons">
+      <button type="button" class="notice-action-cancel" id="noticeActionCancel" onclick="tutupDialogNotice_()">Batal</button>
+      <button type="button" class="notice-action-primary" id="noticeActionPrimary" onclick="aksiKonfirmasiDialogNotice_()">Oke</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
