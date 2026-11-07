@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- FumiMKS2 Revisi 224.5.1-M1.3.3 - Modul Notice QPS/Non-QPS terisolasi; Dashboard dan menu utama dipertahankan. -->
+<!-- FumiMKS2 Revisi 224.5.1-M1.3.4 - Hardening XSS, validasi Notice, dan konsistensi UI. -->
 <html lang="id">
 <head>
 <base target="_top">
@@ -2194,6 +2194,27 @@ button.stat-card { border:1px solid #dbe4f0; }
 @media(max-width:480px){.notice-action-card{padding:38px 17px 20px;border-radius:19px}.notice-action-logo{width:112px;height:90px}.notice-action-buttons button{font-size:12px;padding:9px 10px}}
 
 </style>
+<script>
+(function () {
+    const host = String(location.hostname || '').toLowerCase();
+    const isAppsScriptHost = host === 'script.google.com' || host.endsWith('.googleusercontent.com');
+    if (isAppsScriptHost) return;
+
+    const manifestLink = document.createElement('link');
+    manifestLink.rel = 'manifest';
+    manifestLink.href = './manifest.json';
+    document.head.appendChild(manifestLink);
+
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function () {
+            navigator.serviceWorker.register('./sw.js', { scope: './' })
+                .catch(function (error) {
+                    console.warn('Service Worker FumiMKS2 gagal didaftarkan:', error);
+                });
+        });
+    }
+})();
+</script>
 </head>
 <body>
 
@@ -3469,7 +3490,29 @@ const signaturePads = {};
 // ==========================================
 // INISIALISASI
 // ==========================================
+function backendAppsScriptTersedia_() {
+    return Boolean(window.google && window.google.script && window.google.script.run);
+}
+
 function inisialisasiSistemAplikasi() {
+    if (!backendAppsScriptTersedia_()) {
+        const loginSection = document.getElementById('loginSection');
+        const errorBox = document.getElementById('authErrorMsg');
+        const authControls = ['btnKirimOtp', 'btnAjukanIzin', 'btnVerifOtp'];
+        if (loginSection) loginSection.style.display = 'flex';
+        if (errorBox) {
+            errorBox.textContent = 'Backend Google Apps Script tidak tersedia pada hosting ini. Buka aplikasi melalui URL deployment Google Apps Script untuk menggunakan login, antrean, Notice, dan dokumen.';
+            errorBox.style.display = 'block';
+        }
+        authControls.forEach(id => {
+            const button = document.getElementById(id);
+            if (button) {
+                button.disabled = true;
+                button.title = 'Fitur memerlukan backend Google Apps Script.';
+            }
+        });
+        return;
+    }
     checkLoginSession();
     initSignaturePad('fumigator', 'fdSignatureCanvas');
     initSignaturePad('customer', 'fdCustomerCanvas');
@@ -3498,7 +3541,10 @@ function tampilkanModalDev(namaModul) {
     const desc = document.getElementById('devModalDesc');
     if (desc) {
         if (namaModul) {
-            desc.innerHTML = `Modul <strong>${namaModul}</strong> sedang dalam tahap pengembangan dan akan segera tersedia pada pembaruan berikutnya.`;
+            desc.replaceChildren();
+            const strong = document.createElement('strong');
+            strong.textContent = String(namaModul);
+            desc.append('Modul ', strong, ' sedang dalam tahap pengembangan dan akan segera tersedia pada pembaruan berikutnya.');
         } else {
             desc.textContent = 'Modul ini sedang dalam tahap pengembangan dan akan segera tersedia pada pembaruan berikutnya.';
         }
@@ -3791,7 +3837,8 @@ function muatAntreanDariServer() {
             updateDashboardStats(dataAntreanServerCache);
         })
         .withFailureHandler(err => {
-            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#dc2626; padding:24px;">Gagal memuat: ${err.message}</td></tr>`;
+            const message = escapeHtmlDashboard_(err && err.message ? err.message : 'Kesalahan tidak diketahui');
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#dc2626; padding:24px;">Gagal memuat: ${message}</td></tr>`;
         })
         .getDaftarAntreanServer(getAuthToken_());
 }
@@ -4073,7 +4120,7 @@ function renderTabelAntrean(daftar) {
 
     if (!totalItems) {
         if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px; color:#64748b;">Tidak ada dokumen ditemukan.</td></tr>';
-        if (mobileCardsWrap) mobileCardsWrap.innerHTML = '<div style="text-align:center; padding:24px; color:#64748b;">Tidak ada dokumen ditemukan.</div>';
+        if (mobileCardsWrap) mobileCardsWrap.textContent = 'Tidak ada dokumen ditemukan.';
         renderPaginationButtons(0, 1, 1);
         return;
     }
@@ -4084,12 +4131,16 @@ function renderTabelAntrean(daftar) {
     pagedData.forEach((item, idx) => {
         const nomorUrut = startIdx + idx + 1;
         const st = String(item.status || '').toLowerCase();
-        const safeNama = (item.namaCustomer || '').replace(/'/g, "\\'");
-        const safeId = (item.idDokumen || '').replace(/'/g, "\\'");
-        const safeUrl = (item.urlPdf || '').replace(/'/g, "\\'");
-        const tglText = formatTanggalAntrean(item.terakhirDisimpan);
+        const id = String(item.idDokumen || '');
+        const customer = String(item.namaCustomer || '');
+        const safeId = escapeHtmlDashboard_(id);
+        const safeCustomer = escapeHtmlDashboard_(customer);
+        const idArg = jsArgAttr_(id);
+        const customerArg = jsArgAttr_(customer);
+        const safeUrl = urlDriveAman_(item.urlPdf || '');
+        const urlArg = jsArgAttr_(safeUrl);
+        const tglText = escapeHtmlDashboard_(formatTanggalAntrean(item.terakhirDisimpan));
 
-        // Penentuan Border Aksen Kiri & Badge Status
         let badgeClass = 'status-proses';
         let badgeIcon = 'fa-solid fa-arrows-rotate';
         let badgeLabel = 'Proses';
@@ -4113,62 +4164,41 @@ function renderTabelAntrean(daftar) {
         }
 
         const badgeHtml = `<span class="mockup-status-badge ${badgeClass}"><i class="${badgeIcon}"></i> ${badgeLabel}</span>`;
-
-        // Baris Tabel Desktop
         htmlDesktop += `
             <tr style="border-left: 5px solid ${accentBorder};">
                 <td style="font-weight: 700; color: #0f172a; text-align: center;">${nomorUrut}</td>
-                <td>
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        <i class="fa-regular fa-file-lines" style="color: #0066ff; font-size: 15px;"></i>
-                        <strong style="color: #0066ff; cursor: pointer; word-break: break-all;" onclick="bukaDraftPekerjaan('${safeId}')" title="Buka Dokumen">${item.idDokumen}</strong>
-                    </div>
-                </td>
-                <td>
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        <i class="fa-solid fa-users" style="color: #64748b; font-size: 13px;"></i>
-                        <span style="font-weight: 600; color: #1e293b;">${item.namaCustomer}</span>
-                    </div>
-                </td>
-                <td style="white-space: nowrap; color: #475569;">
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        <i class="fa-regular fa-calendar-days" style="color: #64748b; font-size: 13px;"></i>
-                        <span>${tglText}</span>
-                    </div>
-                </td>
-                <td style="text-align: center; white-space: nowrap;">${badgeHtml}</td>
-                <td style="text-align: center; white-space: nowrap;">
-                    <div class="action-buttons-group">
-                        <button type="button" class="btn-action-mockup" onclick="bukaDraftPekerjaan('${safeId}')" title="Edit Dokumen"><i class="fa-solid fa-pen"></i></button>
-                        <button type="button" class="btn-action-mockup" onclick="bukaAksiLihatPdf('${safeId}', '${safeUrl}')" title="Lihat PDF"><i class="fa-solid fa-eye"></i></button>
-                        <button type="button" class="btn-action-mockup" onclick="bukaMenuAksiCepat('${safeId}', '${safeNama}', event)" title="Opsi"><i class="fa-solid fa-ellipsis-vertical"></i></button>
-                    </div>
-                </td>
+                <td><div style="display:flex; align-items:center; gap:8px;">
+                    <i class="fa-regular fa-file-lines" style="color:#0066ff;font-size:15px;"></i>
+                    <strong style="color:#0066ff;cursor:pointer;word-break:break-all;" onclick="bukaDraftPekerjaan(${idArg})" title="Buka Dokumen">${safeId}</strong>
+                </div></td>
+                <td><div style="display:flex;align-items:center;gap:8px;">
+                    <i class="fa-solid fa-users" style="color:#64748b;font-size:13px;"></i>
+                    <span style="font-weight:600;color:#1e293b;">${safeCustomer}</span>
+                </div></td>
+                <td style="white-space:nowrap;color:#475569;"><div style="display:flex;align-items:center;gap:8px;">
+                    <i class="fa-regular fa-calendar-days" style="color:#64748b;font-size:13px;"></i><span>${tglText}</span>
+                </div></td>
+                <td style="text-align:center;white-space:nowrap;">${badgeHtml}</td>
+                <td style="text-align:center;white-space:nowrap;"><div class="action-buttons-group">
+                    <button type="button" class="btn-action-mockup" onclick="bukaDraftPekerjaan(${idArg})" title="Edit Dokumen"><i class="fa-solid fa-pen"></i></button>
+                    <button type="button" class="btn-action-mockup" onclick="bukaAksiLihatPdf(${idArg}, ${urlArg})" title="Lihat PDF"><i class="fa-solid fa-eye"></i></button>
+                    <button type="button" class="btn-action-mockup" onclick="bukaMenuAksiCepat(${idArg}, ${customerArg}, event)" title="Opsi"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+                </div></td>
             </tr>`;
 
-        // Kartu Mobile (Smartphone)
         htmlMobile += `
-            <div class="antrean-mobile-card-item" style="border-left: 5px solid ${accentBorder};">
+            <div class="antrean-mobile-card-item" style="border-left:5px solid ${accentBorder};">
                 <div class="mobile-card-row-top">
-                    <div class="mobile-card-doc-id" onclick="bukaDraftPekerjaan('${safeId}')">
-                        <i class="fa-regular fa-file-lines"></i>
-                        <span>${item.idDokumen}</span>
-                    </div>
+                    <div class="mobile-card-doc-id" onclick="bukaDraftPekerjaan(${idArg})"><i class="fa-regular fa-file-lines"></i><span>${safeId}</span></div>
                     ${badgeHtml}
                 </div>
-                <div class="mobile-card-customer">
-                    <i class="fa-solid fa-users"></i>
-                    <span>${item.namaCustomer}</span>
-                </div>
+                <div class="mobile-card-customer"><i class="fa-solid fa-users"></i><span>${safeCustomer}</span></div>
                 <div class="mobile-card-row-bottom">
-                    <div class="mobile-card-date">
-                        <i class="fa-regular fa-calendar-days"></i>
-                        <span>${tglText}</span>
-                    </div>
+                    <div class="mobile-card-date"><i class="fa-regular fa-calendar-days"></i><span>${tglText}</span></div>
                     <div class="action-buttons-group">
-                        <button type="button" class="btn-action-mockup" onclick="bukaDraftPekerjaan('${safeId}')" title="Edit Dokumen"><i class="fa-solid fa-pen"></i></button>
-                        <button type="button" class="btn-action-mockup" onclick="bukaAksiLihatPdf('${safeId}', '${safeUrl}')" title="Lihat PDF"><i class="fa-solid fa-eye"></i></button>
-                        <button type="button" class="btn-action-mockup" onclick="bukaMenuAksiCepat('${safeId}', '${safeNama}', event)" title="Opsi"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+                        <button type="button" class="btn-action-mockup" onclick="bukaDraftPekerjaan(${idArg})" title="Edit Dokumen"><i class="fa-solid fa-pen"></i></button>
+                        <button type="button" class="btn-action-mockup" onclick="bukaAksiLihatPdf(${idArg}, ${urlArg})" title="Lihat PDF"><i class="fa-solid fa-eye"></i></button>
+                        <button type="button" class="btn-action-mockup" onclick="bukaMenuAksiCepat(${idArg}, ${customerArg}, event)" title="Opsi"><i class="fa-solid fa-ellipsis-vertical"></i></button>
                     </div>
                 </div>
             </div>`;
@@ -4176,7 +4206,6 @@ function renderTabelAntrean(daftar) {
 
     if (tbody) tbody.innerHTML = htmlDesktop;
     if (mobileCardsWrap) mobileCardsWrap.innerHTML = htmlMobile;
-
     renderPaginationButtons(totalItems, startIdx + 1, endIdx);
 }
 
@@ -4343,9 +4372,32 @@ function formatTanggalAntrean(raw) {
 }
 
 // Buka PDF atau Pratinjau
+function urlDriveAman_(value) {
+    try {
+        const parsed = new URL(String(value || ''), window.location.href);
+        if (parsed.protocol !== 'https:') return '';
+        const host = parsed.hostname.toLowerCase();
+        if (!['drive.google.com', 'docs.google.com'].includes(host)) return '';
+        if (!/^\/(?:file\/d\/|open$|document\/d\/|spreadsheets\/d\/)/.test(parsed.pathname)) return '';
+        return parsed.href;
+    } catch (err) {
+        return '';
+    }
+}
+
+function jsArgAttr_(value) {
+    const json = JSON.stringify(String(value == null ? '' : value))
+        .replace(/\u2028/g, '\\u2028')
+        .replace(/\u2029/g, '\\u2029');
+    return escapeHtmlDashboard_(json);
+}
+
 function bukaAksiLihatPdf(idDokumen, urlPdf) {
-    if (urlPdf) {
-        window.open(urlPdf, '_blank');
+    const safeUrl = urlDriveAman_(urlPdf);
+    if (safeUrl) {
+        window.open(safeUrl, '_blank', 'noopener,noreferrer');
+    } else if (urlPdf) {
+        alert('Tautan PDF tidak valid atau bukan berasal dari Google Drive.');
     } else {
         bukaDraftPekerjaan(idDokumen);
     }
@@ -4656,7 +4708,11 @@ function inisialisasiNoticeForm_() {
   if (idEl) idEl.value = id;
   if (noEl) noEl.value = nomorNoticeDariIdClient_(id);
   const tanggal = document.getElementById('noticeTanggal');
-  if (tanggal && !tanggal.value) tanggal.value = new Date().toISOString().slice(0,10);
+  if (tanggal && !tanggal.value) {
+    const now = new Date();
+    const localDate = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+    tanggal.value = localDate;
+  }
   if (!document.querySelector('#noticeEnclosureRows tr')) tambahEnclosureNotice_();
   ubahKategoriNotice_();
   ubahSasaranNotice_();
@@ -4957,8 +5013,8 @@ function renderReviewWorkspace_() {
   const html = daftar.map((item,index) => {
     const match = pdfs.find(p => String(p.nama || p.name || p.label || '').toLowerCase().includes(item[1].toLowerCase()));
     const status = match ? 'Terbit' : 'Belum Dibuat';
-    const safeUrl = match && match.url ? String(match.url) : '';
-    const action = safeUrl ? '<a href="' + escapeHtmlDashboard_(safeUrl) + '" target="_blank" rel="noopener">View / Unduh</a>' : '<span style="color:#94a3b8;">Belum tersedia</span>';
+    const safeUrl = match && match.url ? urlDriveAman_(match.url) : '';
+    const action = safeUrl ? '<a href="' + escapeHtmlDashboard_(safeUrl) + '" target="_blank" rel="noopener noreferrer">View / Unduh</a>' : '<span style="color:#94a3b8;">Belum tersedia / tautan tidak valid</span>';
     return '<tr><td>'+(index+1)+'</td><td><strong>'+escapeHtmlDashboard_(item[0])+'</strong></td><td>'+action+'</td><td><span class="doc-review-pill '+(match?'ready':'')+'">'+status+'</span></td></tr>';
   }).join('');
   rows.innerHTML = html;
@@ -5469,13 +5525,24 @@ function pemicuAutosave() {
 
 function tambahBarisEmail(nilaiDefault = '') {
     const container = document.getElementById('wadahEmailList');
+    if (!container) return;
     const div = document.createElement('div');
     div.className = 'baris-email';
     div.style.cssText = 'display:flex; gap:8px; margin-bottom:8px;';
-    div.innerHTML = `
-        <input type="email" class="fd-email-item" value="${nilaiDefault}" placeholder="nama@customer.com" required style="flex:1;">
-        <button type="button" class="danger" style="padding:0 12px;" onclick="this.parentElement.remove()">X</button>
-    `;
+    const input = document.createElement('input');
+    input.type = 'email';
+    input.className = 'fd-email-item';
+    input.value = String(nilaiDefault || '');
+    input.placeholder = 'nama@customer.com';
+    input.required = true;
+    input.style.flex = '1';
+    const remove = document.createElement('button');
+    remove.type = 'button';
+    remove.className = 'danger';
+    remove.style.padding = '0 12px';
+    remove.textContent = 'X';
+    remove.addEventListener('click', () => div.remove());
+    div.append(input, remove);
     container.appendChild(div);
 }
 
@@ -5956,24 +6023,49 @@ function muatFormulir() {
 
 function tampilkanDaftarFormulir() {
     const container = document.getElementById('daftarFormulir');
-    const keyword = (document.getElementById('searchFormulir').value || '').toLowerCase().trim();
-    
-    const hasil = dataFormulir.filter(f => f.nama.toLowerCase().includes(keyword));
-    
+    const searchEl = document.getElementById('searchFormulir');
+    if (!container) return;
+    const keyword = String(searchEl && searchEl.value || '').toLowerCase().trim();
+    const hasil = (Array.isArray(dataFormulir) ? dataFormulir : [])
+        .filter(f => String(f && f.nama || '').toLowerCase().includes(keyword));
+
+    container.replaceChildren();
     if (!hasil.length) {
-        container.innerHTML = '<div class="card" style="grid-column:1/-1;">Tidak ada formulir ditemukan.</div>';
+        const empty = document.createElement('div');
+        empty.className = 'card';
+        empty.style.gridColumn = '1/-1';
+        empty.textContent = 'Tidak ada formulir ditemukan.';
+        container.appendChild(empty);
         return;
     }
-    
-    container.innerHTML = hasil.map(f => `
-        <div class="card" style="margin-bottom:0;">
-            <h3 style="margin:0 0 6px 0; font-size:14px; color:#0f172a;">${f.nama}</h3>
-            <p style="font-size:12px; color:#64748b; margin:0 0 14px 0;">Update: ${f.tanggalUpdate}</p>
-            <a href="${f.url}" target="_blank" rel="noopener" style="display:inline-block; padding:7px 12px; background:#0066FF; color:#fff; border-radius:6px; font-size:12px; font-weight:bold; text-decoration:none;">
-                Buka PDF
-            </a>
-        </div>
-    `).join('');
+
+    hasil.forEach(f => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.style.marginBottom = '0';
+        const heading = document.createElement('h3');
+        heading.style.cssText = 'margin:0 0 6px 0;font-size:14px;color:#0f172a;';
+        heading.textContent = String(f.nama || 'Dokumen tanpa nama');
+        const date = document.createElement('p');
+        date.style.cssText = 'font-size:12px;color:#64748b;margin:0 0 14px 0;';
+        date.textContent = 'Update: ' + String(f.tanggalUpdate || '-');
+        card.append(heading, date);
+        const safeUrl = urlDriveAman_(f.url);
+        if (safeUrl) {
+            const link = document.createElement('a');
+            link.href = safeUrl;
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer';
+            link.style.cssText = 'display:inline-block;padding:7px 12px;background:#0066FF;color:#fff;border-radius:6px;font-size:12px;font-weight:bold;text-decoration:none;';
+            link.textContent = 'Buka PDF';
+            card.appendChild(link);
+        } else {
+            const invalid = document.createElement('span');
+            invalid.textContent = 'Tautan PDF tidak valid.';
+            card.appendChild(invalid);
+        }
+        container.appendChild(card);
+    });
 }
 </script>
 
